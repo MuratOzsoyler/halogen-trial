@@ -1,0 +1,81 @@
+module Main where
+
+import Prelude
+
+import Control.Monad.State (get, put)
+import CSS (backgroundColor, lightgray) as CSS
+import CSS.TextAlign (startTextAlign)
+import Data.Const (Const)
+import Data.Maybe (Maybe (Just))
+import Effect (Effect)
+import Effect.Aff (Aff, launchAff_)
+import Halogen (ClassName(..), ComponentHTML)
+import Halogen as H
+import Halogen.Aff (awaitBody)
+import Halogen.HTML as HH
+import Halogen.HTML.CSS (style) as CSS
+import Halogen.HTML.Events as HE
+import Halogen.HTML.Properties as HP
+import Halogen.VDom.Driver (runUI)
+
+
+main :: Effect Unit
+main = launchAff_ do
+    body <- awaitBody
+    runUI (makeComponent false render handleAction) unit body
+
+data State = Boolean
+
+data Action = Toggle
+
+type DynamicHtml action = ComponentHTML action () Aff
+type StateAndActionRenderer state action = (state -> DynamicHtml action)
+
+render :: StateAndActionRenderer State Action -- Boolean -> ComponentHTML Action () Aff
+render isOn =
+    let stateLabel = if isOn then "ON" else "OFF"
+    in HH.div 
+        [ HP.class_ $ ClassName "container-fluid"
+        , CSS.style $ CSS.backgroundColor CSS.lightgray 
+        ]
+        [ HH.div_
+            [ HH.h1_
+                [ HH.text "Murat Özsöyler" ]
+            ]
+        , HH.button
+            [ HP.classes $ ClassName <$> ["btn", "btn-warning"]
+            , HE.onClick $ const $ Just Toggle
+            ]
+            [ HH.text stateLabel ]
+        , HH.div_ 
+            [ HH.span_ [ HH.text "Yakında çalışanlarını da yapacak mı acaba?"]]
+        , HH.div_ 
+            [ HH.span [ HP.class_ $ ClassName "lead" ] [ HH.text "Yapar, yapaaar!"]]
+        , HH.div_ 
+                [ HH.span 
+                    [ HP.class_ $ ClassName "lead" ] 
+                    [ HH.text $ "Durum:" <> stateLabel ]
+                ]
+        ]
+
+type HandleSimpleAction state action =
+  (action -> H.HalogenM state action () Void Aff Unit)
+
+handleAction :: HandleSimpleAction State Action -- Action -> H.HalogenM Boolean Action () Void Aff Unit
+handleAction _ = do
+    state <- get
+    let s = not state
+    put s
+
+makeComponent 
+    :: forall action state
+     . state 
+    -- -> (state -> HH.ComponentHTML action () Aff)
+    -- -> (action → H.HalogenM state action () Void Aff Unit)
+    -> H.Component HH.HTML (Const Unit) Unit Void Aff
+makeComponent {- state render actionHandler -} =
+    H.mkComponent
+        { initialState: const (false :: State)
+        , render: render
+        , eval: H.mkEval $ H.defaultEval { handleAction: handleAction }
+        }

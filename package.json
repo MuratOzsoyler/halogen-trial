@@ -1,0 +1,16 @@
+{
+  "name": "halogen-trial",
+  "version": "0.0.1",
+  "description": "Try Purescript&Halogen",
+  "main": "index.js",
+  "author": "Murat Özsöyler",
+  "license": "MIT",
+  "private": false,
+  "scripts": {
+    "docs": "spago doc --open",
+    "repl": "spago repl",
+    "bundle": "spago bundle-app -m Main -t ./dist/index.js",
+    "bundle+wait": "spago bundle-app --watch --clear-screen -m Main -t ./dist/index.js",
+    "serve": "parcel serve ./dist/index.html -o index-parcelified.html --open"
+  }
+}
