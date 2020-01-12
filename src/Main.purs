@@ -3,11 +3,9 @@ module Main where
 import Prelude
 
 import CSS (backgroundColor, lightgray) as CSS
-import Control.Monad.State (get, modify_, put)
+import Control.Monad.State (put)
 import Data.Const (Const)
-import Data.Foldable (sequence_)
 import Data.Maybe (Maybe(..))
-import Data.Time.Duration (Milliseconds(..), Minutes(..), convertDuration)
 import Effect (Effect)
 import Effect.Aff (Aff, launchAff_)
 import Effect.Class.Console (log)
@@ -19,7 +17,6 @@ import Halogen as H
 import Halogen.Aff (awaitBody)
 import Halogen.HTML as HH
 import Halogen.HTML.CSS (style) as CSS
-import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 import Halogen.Query.EventSource as HQES
 import Halogen.VDom.Driver (runUI)
@@ -49,8 +46,8 @@ component evt = H.mkComponent
     actionHandler :: Action -> H.HalogenM State Action () Void Aff Unit -- HandleSimpleAction State Action
     actionHandler = case _ of
         Init -> void $ H.subscribe $ HQES.effectEventSource \emitter -> do
-            let unsubscribe = E.subscribe evt (log <<< ("Received value:" <> _) <<< show)  -- (HQES.emit emitter <<< NewInt)
-            pure $ HQES.Finalizer $ sequence_ [unsubscribe]
+            unsubscribe <- E.subscribe evt (HQES.emit emitter <<< NewInt) {- (log <<< ("Received value:" <> _) <<< show) -}
+            pure $ HQES.Finalizer $ unsubscribe
         NewInt i -> put $ Just i
 
 main :: Effect Unit
